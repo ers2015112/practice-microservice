@@ -18,23 +18,18 @@ package uk.gov.hmrc.models
 
 import org.joda.time.DateTime
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, JsSuccess, Json}
 import uk.gov.hmrc.lisa.models.Investor
+
 
 class InvestorSpec extends PlaySpec  {
 
-  val investor = Investor("Me", "Person", new DateTime(1985,12,14,0,0), "AA123456A")
+  val investorFromJson = Json.parse("""{"nino": "AA123456A", "firstname": "Me", "lastname": "Person", "dob": "1985-12-14"}""")
+  val investorInvalidNino = Json.parse("""{"nino": "X", "firstname": "Me", "lastname": "Person", "dob": "1985-12-14"}""")
+  val investorInvalidDob = Json.parse("""{"nino": "AA123456A", "firstname": "Me", "lastname": "Person", "dob": "198-14-14"}""")
+  val investor = investorFromJson.as[Investor]
 
-  val investorFromJson = Json.toJson(
-    """{
-    \"investorNINO\": \"AA123456A\",
-    \"firstName\": \"First Name\",
-    \"lastName\": \"Last Name\",
-    \"dateOfBirth\": \"1985-03-25\"
-  }"""
-  )
-
-  "The Investor model "  must {
+  "The Investor model " must {
     "return the correct firstname " in {
       investor.firstname mustBe "Me"
     }
@@ -48,5 +43,38 @@ class InvestorSpec extends PlaySpec  {
       investor.dob.toString("MM-dd-YYYY") mustBe "12-14-1985"
     }
 
+  }
+
+
+  "Validation" must {
+    "fail with an invalid nino" in {
+      val res = investorInvalidNino.validate[Investor]
+
+      res match {
+        case s: JsSuccess[Investor] => fail()
+        case e: JsError => JsError.toJson(e).toString().contains("error.formatting.nino") mustBe true
+      }
+    }
+    "fail with an invalid dob" in {
+      val res = investorInvalidDob.validate[Investor]
+
+      res match {
+        case s: JsSuccess[Investor] => fail()
+        case e: JsError => JsError.toJson(e).toString().contains("error.formatting.dob") mustBe true
+      }
+    }
+  }
+
+  "Write" must {
+    "Write a valid json" in {
+      val investor = Investor("Me", "Person", new DateTime(2005, 12, 14, 0, 0), "AA123456A")
+
+      val res = Json.toJson[Investor](investor).validate[Investor]
+
+      res match {
+        case s: JsSuccess[Investor] => assert(true)
+        case e: JsError => fail()
+      }
+    }
   }
 }
