@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.models
+package uk.gov.hmrc.lisa.models
 
 import org.joda.time.DateTime
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, JsSuccess, Json}
-import uk.gov.hmrc.lisa.models.Investor
 
 
 class InvestorSpec extends PlaySpec  {
